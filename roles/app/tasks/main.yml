@@ -1,0 +1,14 @@
+---
+- name: Launch application container
+  docker_container:
+    name: simple-api
+    image: "{{ dockerhub_username }}/tp-devops-simple-api:latest"
+    state: started
+    restart_policy: always
+    networks:
+      - name: my_network
+    env:
+      DATABASE_HOST: database
+      DATABASE_PASSWORD: pwd
+    ports: 
+      "8080:8080"

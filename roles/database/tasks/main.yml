@@ -1,0 +1,13 @@
+---
+- name: Launch database container
+  docker_container:
+    name: database
+    image: "{{ dockerhub_username }}/tp-devops-database:latest"
+    state: started
+    restart_policy: always
+    networks:
+      - name: my_network
+    env:
+      POSTGRES_PASSWORD: pwd
+    volumes:
+      - db-volume:/var/lib/postgresql/data
