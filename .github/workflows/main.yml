@@ -1,65 +1,19 @@
-name: CI devops 2025
+name: CI/CD Ansible Deploy
 
 on:
   push:
     branches:
       - main
-      - develop
   pull_request:
     branches:
       - main
-      - develop
 
 jobs:
-  build-and-push-docker-image:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Login to DockerHub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-
-      - name: Set short SHA tag
-        id: vars
-        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
-
-      - name: Build and push simple-api image
-        uses: docker/build-push-action@v6
-        with:
-          context: simple-api
-          push: ${{ github.ref == 'refs/heads/main' }}
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-simple-api:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-simple-api:${{ env.SHORT_SHA }}
-
-      - name: Build and push database image
-        uses: docker/build-push-action@v6
-        with:
-          context: database
-          push: ${{ github.ref == 'refs/heads/main' }}
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-database:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-database:${{ env.SHORT_SHA }}
-
-      - name: Build and push httpd image
-        uses: docker/build-push-action@v6
-        with:
-          context: http-server
-          push: ${{ github.ref == 'refs/heads/main' }}
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:${{ env.SHORT_SHA }}
-
   deploy-ansible:
-    needs: build-and-push-docker-image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Ansible repo
         uses: actions/checkout@v4
-        with:
-          repository: mehdi-saadi-engineer/TP3-DevOps
-          path: ansible
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -82,4 +36,4 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
-          ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml --extra-vars "ansible_python_interpreter=/usr/bin/python3"
+          ansible-playbook -i inventories/setup.yml playbook.yml --extra-vars "ansible_python_interpreter=/usr/bin/python3"
